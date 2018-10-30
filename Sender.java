@@ -1,12 +1,10 @@
 /*************************************
  * Filename:  Sender.java
- * Names:
- * Student-IDs:
- * Date:
+ * Names: Robert Szafarczyk, Thepnathi Chindalaksanaloet
+ * Student-IDs: 201307211, 201123978
+ * Date: 30/10/18
  *************************************/
 import java.util.Random;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 
 public class Sender extends NetworkHost {
     /*
@@ -91,31 +89,20 @@ public class Sender extends NetworkHost {
 
     // Add any necessary class variables here. They can hold
     // state information for the sender.
+
+    // value for increment = (2 * RTT) * 2
     private final double TIMER_INCREMENT = 40;
+    // buffer to hold the messages from application layer
     private MessageBuffer msgBuffer = new MessageBuffer();
+    // sender window
     private OutWindow window = new OutWindow();
     private int baseSeqNum;
     private int nextSeqNum;
 
     // Also add any necessary methods (e.g. checksum of a String)
-    // returns number of bytes contained in message, use UTF-32 encoding
-    private boolean isCorrupted(Packet packet) {
-        int checkSum = generateChecksum(packet.getSeqnum(), packet.getAcknum(),
-                                            getNumOfBytes(packet.getPayload()));
-        if (packet.getChecksum() == checkSum) {
-            return false;
-        }
-        return true;
-    }
 
-    private boolean isInWindow(Packet p) {
-        if (baseSeqNum <= p.getAcknum()) {
-            return true;
-        }
-        return false;
-    }
-
-    private int getNumOfBytes(final String message) {
+    // returns the sum of the integer value of the characters in message
+    private int getIntValue(final String message) {
         int msgValue = 0;
         char[] msgChars = message.toCharArray();
 
@@ -126,9 +113,30 @@ public class Sender extends NetworkHost {
         return msgValue;
     }
 
+    // returns the calculated checksum
     private int generateChecksum(int seqNum, int ackNum, int bytesSent) {
         return seqNum + ackNum + bytesSent;
     }
+
+    // returns true if the checksum field in the packet is not equal
+    // to the calculated checksum
+    private boolean isCorrupted(Packet packet) {
+        int checkSum = generateChecksum(packet.getSeqnum(), packet.getAcknum(),
+                                            getIntValue(packet.getPayload()));
+        if (packet.getChecksum() == checkSum) {
+            return false;
+        }
+        return true;
+    }
+
+    // returns true if the acknowledged packet is in sender window
+    private boolean isInWindow(Packet p) {
+        if (baseSeqNum <= p.getAcknum()) {
+            return true;
+        }
+        return false;
+    }
+
 
     // This is the constructor.  Don't touch!
     public Sender(int entityName,
@@ -156,19 +164,21 @@ public class Sender extends NetworkHost {
         }
 
         if (!window.isFull()) {
+            // extract message from buffer and construct the packet
             Message nextMsg = msgBuffer.poll();
-            int nextBytesSent = getNumOfBytes(nextMsg.getData());
+            int nextBytesSent = getIntValue(nextMsg.getData());
             int nextCheckSum = generateChecksum(nextSeqNum, nextSeqNum,
                                                             nextBytesSent);
             Packet p = new Packet(nextSeqNum, nextSeqNum, nextCheckSum,
                                                         nextMsg.getData());
             window.add(p);
+            udtSend(p);
+            if (baseSeqNum == nextSeqNum) {
+                // keep timer only for the baseSeqNum packet
+                startTimer(TIMER_INCREMENT);
+            }
             nextSeqNum++;
         }
-
-        udtSend(window.peek());
-        // System.out.println("SENDER SENT: " + window.peek());
-        startTimer(TIMER_INCREMENT);
     }
 
     // This routine will be called whenever a packet sent from the receiver
@@ -176,20 +186,34 @@ public class Sender extends NetworkHost {
     // arrives at the sender.  "packet" is the (possibly corrupted) packet
     // sent from the receiver.
     protected void Input(Packet packet) {
-        // System.out.println("SENDER RECEIVED: " + packet);
         if (isCorrupted(packet) || !isInWindow(packet)) {
             return; // do nothing
         }
 
-        // baseSeqNum is ACKed, remove that packet from window
+        // baseSeqNum packet was ACKed, remove that packet from window
         window.remove();
         baseSeqNum = packet.getAcknum() + 1;
 
-        if (baseSeqNum == nextSeqNum) { // no pkts in window
+        if (baseSeqNum == nextSeqNum) {
+            // no more pkts in window
             stopTimer();
         }
         else {
+            // start timer for next in-flight packet
             startTimer(TIMER_INCREMENT);
+        }
+
+        // add msg from buffer in place of the ACKed packet
+        if (!msgBuffer.isEmpty()) {
+            Message nextMsg = msgBuffer.poll();
+            int nextBytesSent = getIntValue(nextMsg.getData());
+            int nextCheckSum = generateChecksum(nextSeqNum, nextSeqNum,
+                                                            nextBytesSent);
+            Packet p = new Packet(nextSeqNum, nextSeqNum, nextCheckSum,
+                                                        nextMsg.getData());
+            window.add(p);
+            udtSend(p);
+            nextSeqNum++;
         }
     }
 
@@ -198,14 +222,13 @@ public class Sender extends NetworkHost {
     // to control the retransmission of packets. See startTimer() and
     // stopTimer(), above, for how the timer is started and stopped.
     protected void TimerInterrupt() {
-        // System.out.println("TIMER INTERRUPT");
+        // retransmit all packets in window from baseSeqNum up to nextSeqNum
         startTimer(TIMER_INCREMENT);
         for (Packet p : window.getWindow()) {
             if (p == null) {
                 break;
             }
             udtSend(p);
-            // System.out.println("SENDER SENT: " + p);
         }
 
     }
@@ -215,8 +238,8 @@ public class Sender extends NetworkHost {
     // initialization (e.g. of member variables you add to control the state
     // of the sender).
     protected void Init() {
-        baseSeqNum = 0;
-        nextSeqNum = 0;
+        baseSeqNum = 1;
+        nextSeqNum = 1;
     }
 
 }

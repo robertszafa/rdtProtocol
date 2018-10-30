@@ -51,7 +51,7 @@ public class MessageBuffer {
     }
 
     public boolean isEmpty() {
-        return size > 0;
+        return size == 0;
     }
 
 }

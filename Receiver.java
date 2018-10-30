@@ -1,11 +1,10 @@
 /*************************************
  * Filename:  Receiver.java
- * Names:
- * Student-IDs:
- * Date:
+ * Names: Robert Szafarczyk, Thepnathi Chindalaksanaloet
+ * Student-IDs: 201307211, 201123978
+ * Date: 30/10/18
  *************************************/
 import java.util.Random;
-import java.io.UnsupportedEncodingException;
 
 public class Receiver extends NetworkHost
 
@@ -95,27 +94,9 @@ public class Receiver extends NetworkHost
     private int expectedSeqNum;
 
     // Also add any necessary methods (e.g. checksum of a String)
-    private boolean isCorrupted(Packet packet) {
-        int checkSum = generateChecksum(packet.getSeqnum(), packet.getAcknum(),
-                                            getNumOfBytes(packet.getPayload()));
-        if (packet.getChecksum() == checkSum) {
-            return false;
-        }
-        return true;
-    }
 
-    private boolean isOutOfOrder(Packet p) {
-        if (p.getSeqnum() != expectedSeqNum) {
-            return true;
-        }
-        return false;
-    }
-
-    private int generateChecksum(int seqNum, int ackNum, int bytesSent) {
-        return seqNum + ackNum + bytesSent;
-    }
-
-    private int getNumOfBytes(final String message) {
+    // returns the sum of the integer value of the characters in message
+    private int getIntValue(final String message) {
         int msgValue = 0;
         char[] msgChars = message.toCharArray();
 
@@ -125,6 +106,31 @@ public class Receiver extends NetworkHost
 
         return msgValue;
     }
+
+    // returns the calculated checksum
+    private int generateChecksum(int seqNum, int ackNum, int bytesSent) {
+        return seqNum + ackNum + bytesSent;
+    }
+
+    // returns true if the checksum field in the packet is not equal
+    // to the calculated checksum
+    private boolean isCorrupted(Packet packet) {
+        int checkSum = generateChecksum(packet.getSeqnum(), packet.getAcknum(),
+                                            getIntValue(packet.getPayload()));
+        if (packet.getChecksum() == checkSum) {
+            return false;
+        }
+        return true;
+    }
+
+    // returns true if the packets seqNum doesn't equal the expectedSeqNum
+    private boolean isOutOfOrder(Packet p) {
+        if (p.getSeqnum() != expectedSeqNum) {
+            return true;
+        }
+        return false;
+    }
+
 
     // This is the constructor.  Don't touch!
     public Receiver(int entityName,
@@ -143,28 +149,26 @@ public class Receiver extends NetworkHost
     // arrives at the receiver. Argument "packet" is the (possibly corrupted)
     // packet sent from the sender.
     protected void Input(Packet packet) {
-        // System.out.println("RECEIVER RECEIVED: " + packet);
-
         if (!isCorrupted(packet) && !isOutOfOrder(packet)) {
+            // correct packet has arrived, deliver to application layer
             deliverData(packet.getPayload());
 
+            // send ack for this packet
             Packet ack = new Packet(expectedSeqNum, expectedSeqNum,
                         generateChecksum(expectedSeqNum, expectedSeqNum, 0));
             udtSend(ack);
             expectedSeqNum++;
-            // System.out.println("RECEIVER SENT: " + ack);
         }
-        // packet corrupted or out of order, send ACK for highest rcvd seqNum
         else {
+            // packet corrupted or out of order,
+            // send ACK for last correct received packet
             expectedSeqNum--;
             Packet ackForLastSeq = new Packet(expectedSeqNum, expectedSeqNum,
                         generateChecksum(expectedSeqNum, expectedSeqNum, 0));
             udtSend(ackForLastSeq);
             expectedSeqNum++;
-            // System.out.println("CORRUPTED - RECEIVER SENT: " + ackForLastSeq);
         }
     }
-
 
 
     // This routine will be called once, before any of your other receiver-side
@@ -172,7 +176,7 @@ public class Receiver extends NetworkHost
     // initialization (e.g. of member variables you add to control the state
     // of the receiver).
     protected void Init() {
-        expectedSeqNum = 0;
+        expectedSeqNum = 1;
     }
 
 }

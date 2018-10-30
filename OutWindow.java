@@ -11,6 +11,10 @@ public class OutWindow {
         size = 0;
     }
 
+    public Queue<Packet> getWindow() {
+    	return window;
+    }
+
     public void add(Packet p) {
         if (size < MAX_SIZE) {
             window.add(p);
@@ -51,7 +55,7 @@ public class OutWindow {
     }
 
     public boolean isEmpty() {
-        return size > 0;
+        return size == 0;
     }
 
 }
