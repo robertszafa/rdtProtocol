@@ -217,9 +217,9 @@ public class Sender extends NetworkHost {
     // value for increment = RTT * 2
     private final double TIMER_INCREMENT = 40;
     // buffer to hold the messages from application layer
-    private static MessageBuffer msgBuffer = new MessageBuffer();
+    private static MessageBuffer msgBuffer;
     // sender window
-    private static OutWindow window = new OutWindow();
+    private static OutWindow window;
     private int baseSeqNum;
     private int nextSeqNum;
 
@@ -363,6 +363,8 @@ public class Sender extends NetworkHost {
     protected void Init() {
         baseSeqNum = 1;
         nextSeqNum = 1;
+        msgBuffer = new MessageBuffer();
+        window = new OutWindow();
     }
-
+    
 }
