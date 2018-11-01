@@ -5,6 +5,8 @@
  * Date: 30/10/18
  *************************************/
 import java.util.Random;
+import java.util.Queue;
+import java.util.LinkedList;
 
 public class Sender extends NetworkHost {
     /*
@@ -90,12 +92,134 @@ public class Sender extends NetworkHost {
     // Add any necessary class variables here. They can hold
     // state information for the sender.
 
+    /** NESTED CLASSES **/
+    /* This class encapsulates the sender window.
+     * The window is represented by a Queue of packets and has a MAX_SIZE of 8.
+    */
+    private static class OutWindow {
+        private final int MAX_SIZE = 8;
+        private int size;
+        private Queue<Packet> window;
+
+        public OutWindow() {
+            window = new LinkedList<>();
+            size = 0;
+        }
+
+        public Queue<Packet> getWindow() {
+        	return window;
+        }
+
+        public void add(Packet p) {
+            if (size < MAX_SIZE) {
+                window.add(p);
+                size++;
+            }
+        }
+
+        public void remove() {
+            if (size > 0) {
+                window.remove();
+                size--;
+            }
+        }
+
+        public Packet peek() {
+            if (size > 0) {
+                return window.peek();
+            }
+
+            return null;
+        }
+
+        public Packet poll() {
+            if (size > 0) {
+                size--;
+                return window.poll();
+            }
+
+            return null;
+        }
+
+        public int getSize() {
+        	return size;
+        }
+
+        public boolean isFull() {
+            return size == MAX_SIZE;
+        }
+
+        public boolean isEmpty() {
+            return size == 0;
+        }
+
+    }
+
+    /* This class encapsulates the sender message buffer.
+     * The buffer holds messages that come from the application layer.
+     * The buffer is represented by a Queue of MAX_SIZE 50.
+    */
+    private static class MessageBuffer {
+        private final int MAX_SIZE = 50;
+        private int size;
+        private Queue<Message> buffer;
+
+        public MessageBuffer() {
+            buffer = new LinkedList<>();
+            size = 0;
+        }
+
+        public void add(Message m) {
+            if (size < MAX_SIZE) {
+                buffer.add(m);
+                size++;
+            }
+        }
+
+        public void remove() {
+            if (size > 0) {
+                buffer.remove();
+                size--;
+            }
+        }
+
+        public Message peek() {
+            if (size > 0) {
+                return buffer.peek();
+            }
+
+            return null;
+        }
+
+        public Message poll() {
+            if (size > 0) {
+                size--;
+                return buffer.poll();
+            }
+
+            return null;
+        }
+
+        public int getSize() {
+        	return size;
+        }
+
+        public boolean isFull() {
+            return size == MAX_SIZE;
+        }
+
+        public boolean isEmpty() {
+            return size == 0;
+        }
+    }
+
+    /** GLOBAL VARIABLES **/
     // value for increment = RTT * 2
     private final double TIMER_INCREMENT = 40;
     // buffer to hold the messages from application layer
-    private MessageBuffer msgBuffer = new MessageBuffer();
+    private static MessageBuffer msgBuffer = new MessageBuffer();
     // sender window
-    private OutWindow window = new OutWindow();
+    private static OutWindow window = new OutWindow();
     private int baseSeqNum;
     private int nextSeqNum;
 
