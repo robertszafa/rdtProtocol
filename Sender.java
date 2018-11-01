@@ -3,6 +3,7 @@
  * Names: Robert Szafarczyk, Thepnathi Chindalaksanaloet
  * Student-IDs: 201307211, 201123978
  * Date: 30/10/18
+ * Implemented the GBN protocol
  *************************************/
 import java.util.Random;
 import java.util.Queue;
@@ -303,6 +304,7 @@ public class Sender extends NetworkHost {
             }
             nextSeqNum++;
         }
+        // else refuse data
     }
 
     // This routine will be called whenever a packet sent from the receiver

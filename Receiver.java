@@ -3,6 +3,7 @@
  * Names: Robert Szafarczyk, Thepnathi Chindalaksanaloet
  * Student-IDs: 201307211, 201123978
  * Date: 30/10/18
+ * Implemented the GBN protocol
  *************************************/
 import java.util.Random;
 
