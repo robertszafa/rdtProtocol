@@ -6,9 +6,7 @@
  *************************************/
 import java.util.Random;
 
-public class Receiver extends NetworkHost
-
-{
+public class Receiver extends NetworkHost {
     /*
      * Predefined Constants (static member variables):
      *

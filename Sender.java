@@ -90,7 +90,7 @@ public class Sender extends NetworkHost {
     // Add any necessary class variables here. They can hold
     // state information for the sender.
 
-    // value for increment = (2 * RTT) * 2
+    // value for increment = RTT * 2
     private final double TIMER_INCREMENT = 40;
     // buffer to hold the messages from application layer
     private MessageBuffer msgBuffer = new MessageBuffer();
@@ -230,7 +230,6 @@ public class Sender extends NetworkHost {
             }
             udtSend(p);
         }
-
     }
 
     // This routine will be called once, before any of your other sender-side
