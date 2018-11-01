@@ -1,3 +1,8 @@
+/* This class encapsulates the sender message buffer.
+ * The buffer holds messages that come from the application layer.
+ * The buffer is represented by a Queue of MAX_SIZE 50.
+*/
+
 import java.util.Queue;
 import java.util.LinkedList;
 

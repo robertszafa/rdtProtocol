@@ -1,3 +1,6 @@
+/* This class encapsulates the sender window.
+ * The window is represented by a Queue of packets and has a MAX_SIZE of 8.
+*/
 import java.util.Queue;
 import java.util.LinkedList;
 
