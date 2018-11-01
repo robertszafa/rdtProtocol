@@ -168,7 +168,6 @@ public class Receiver extends NetworkHost {
         }
     }
 
-
     // This routine will be called once, before any of your other receiver-side
     // routines are called. It should be used to do any required
     // initialization (e.g. of member variables you add to control the state

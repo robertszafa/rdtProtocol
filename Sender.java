@@ -92,7 +92,7 @@ public class Sender extends NetworkHost {
     // Add any necessary class variables here. They can hold
     // state information for the sender.
 
-    /** NESTED CLASSES **/
+    /** INNER CLASSES FOR SENDER WINDOW AND MESSAGE BUFFER **/
     /* This class encapsulates the sender window.
      * The window is represented by a Queue of packets and has a MAX_SIZE of 8.
     */
@@ -366,5 +366,5 @@ public class Sender extends NetworkHost {
         msgBuffer = new MessageBuffer();
         window = new OutWindow();
     }
-    
+
 }
